@@ -1,0 +1,23 @@
+{
+  "name": "purescript-optimizely-api",
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "output",
+    "bower.json",
+    "package.json"
+  ],
+  "dependencies": {
+    "purescript-prelude": "^2.0.0",
+    "purescript-console": "^2.0.0",
+    "purescript-foreign-generic": "^3.0.0",
+    "purescript-foreign-datetime": "^1.0.0",
+    "purescript-affjax": "^3.0.2"
+  },
+  "devDependencies": {
+    "purescript-psci-support": "^2.0.0",
+    "purescript-test-unit": "^10.1.0"
+  }
+}
