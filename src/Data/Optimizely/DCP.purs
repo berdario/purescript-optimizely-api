@@ -31,17 +31,16 @@ import Data.Generic.Rep.Show (genericShow)
 import Data.JSDate (fromDateTime, parse, toDateTime, toISOString)
 import Data.List.NonEmpty (NonEmptyList(..))
 import Data.Maybe (Maybe(..), maybe')
-import Data.Optimizely.Common (MatchType)
-import Network.HTTP.Affjax (URL)
 import Data.String.Regex (test)
 import Data.String.Regex.Flags (noFlags)
 import Data.String.Regex.Unsafe (unsafeRegex)
+import Network.HTTP.Affjax (URL)
 
-foreignOptions = defaultOptions{unwrapSingleConstructors=true}
+import Data.Optimizely.Common (Account, Id(..), foreignOptions)
 
 newtype Service = Service
-    { id :: Number
-    , account_id :: Number
+    { id :: Id Service
+    , account_id :: Id Account
     , archived :: Boolean
     , aws_access_key :: String
     , aws_secret_key :: String
@@ -100,13 +99,13 @@ instance showLocatorType :: Show LocatorType where
     show = genericShow
 
 newtype Datasource = Datasource
-    { id :: Number
+    { id :: Id Datasource
     , archived :: Boolean
     , attributes :: Array String
     , aws_access_key :: String
     , aws_secret_key :: String
     , created :: DateTime
-    , dcp_service_id :: Number
+    , dcp_service_id :: Id Service
     , description :: String
     , is_optimizely :: Boolean
     , keyfield_locator_name :: Null LocatorName
@@ -160,10 +159,10 @@ newtype DatasourceAttribute = DatasourceAttribute
     { archived :: Boolean
     , created :: DateTime
     , datatype :: AttributeType
-    , dcp_datasource_id :: Number
+    , dcp_datasource_id :: Id Datasource
     , description :: String
     , format :: Null DateTimeFormat
-    , id :: Number
+    , id :: Id DatasourceAttribute
     , is_value_public :: Boolean
     , last_modified :: DateTime
     , name :: String

@@ -1,4 +1,4 @@
-module Data.Optimizely.Common where
+module Data.Optimizely.Schedule where
 
 import Prelude
 import Data.DateTime as D
@@ -28,21 +28,34 @@ import Network.HTTP.Affjax (URL)
 import Network.HTTP.Affjax.Request (RequestContent)
 import Unsafe.Coerce (unsafeCoerce)
 
-import Data.Optimizely.Internal (readBoundedEnum)
+import Data.Optimizely.Common (Id(..), foreignOptions)
+import Data.Optimizely.Experiment (Experiment(..))
 
-foreignOptions = defaultOptions{unwrapSingleConstructors=true}
+data ScheduleStatus = Active | Inactive
+derive instance genericScheduleStatus :: Generic ScheduleStatus _
 
-foreignToRequest :: forall a. AsForeign a => a -> Tuple (Maybe MediaType) RequestContent
-foreignToRequest x = Tuple (Just applicationJSON) $ unsafeCoerce $ unsafeStringify $ write x
+instance foreignScheduleStatus :: IsForeign ScheduleStatus where
+    read value = parseStatus =<< readString value
+        where
+            parseStatus "ACTIVE" = pure Active
+            parseStatus "INACTIVE" = pure Inactive
+            parseStatus val = error val
+            error val = fail $ ForeignError $ "Expected ACTIVE or INACTIVE, found " <> val
 
-newtype Id a = Id Number
-derive newtype instance eqId :: Eq (Id a)
-derive newtype instance ordId :: Ord (Id a)
-derive newtype instance showId :: Show (Id a)
-derive newtype instance isForeignId :: IsForeign (Id a)
-derive newtype instance asForeignId :: AsForeign (Id a)
+instance showScheduleStatus :: Show ScheduleStatus where
+    show = genericShow
 
-data Account
-data Section
+newtype Schedule = Schedule
+    { status :: ScheduleStatus
+    , start_time :: Null DateTime
+    , stop_time :: Null DateTime
+    , experiment_id :: Id Experiment
+    , id :: Id Schedule
+    }
+derive instance genericSchedule :: Generic Schedule _
 
+instance foreignSchedule :: IsForeign Schedule where
+    read = readGeneric foreignOptions
 
+instance showSchedule :: Show Schedule where
+    show = genericShow

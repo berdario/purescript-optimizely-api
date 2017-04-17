@@ -20,11 +20,10 @@ import Data.Generic.Rep.Show (genericShow)
 import Data.JSDate (fromDateTime, parse, toDateTime, toISOString)
 import Data.List.NonEmpty (NonEmptyList(..))
 import Data.Maybe (Maybe(..), maybe')
-import Data.Optimizely.Internal (readBoundedEnum)
 import Network.HTTP.Affjax (URL)
 
-
-foreignOptions = defaultOptions{unwrapSingleConstructors=true}
+import Data.Optimizely.Common (Id(..), foreignOptions)
+import Data.Optimizely.Experiment (Goal(..), Variation(..))
 
 
 data ResultStatus = Winner | Loser | Inconclusive | Baseline
@@ -46,11 +45,11 @@ instance showResultStatus :: Show ResultStatus where
 type StringId = String
 
 newtype Result = Result
-    { variation_id :: Number
+    { variation_id :: Id Variation
     , variation_name :: String
-    , goal_id :: Number
+    , goal_id :: Id Goal
     , goal_name :: String
-    , baseline_id :: StringId
+    , baseline_id :: Id Variation -- String ?
     , begin_time :: DateTime
     , end_time :: DateTime
     , visitors :: Number

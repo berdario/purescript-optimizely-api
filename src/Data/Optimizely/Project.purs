@@ -21,12 +21,12 @@ import Data.Generic.Rep.Show (genericShow)
 import Data.JSDate (fromDateTime, parse, toDateTime, toISOString)
 import Data.List.NonEmpty (NonEmptyList(..))
 import Data.Maybe (Maybe(..), maybe')
-import Data.Optimizely.Common (foreignToRequest)
+
 import Network.HTTP.Affjax (URL)
 import Network.HTTP.Affjax.Request (class Requestable, toRequest)
 
-
-foreignOptions = defaultOptions{unwrapSingleConstructors=true}
+import Data.Optimizely.DCP as DCP
+import Data.Optimizely.Common (Account, Id, foreignOptions, foreignToRequest)
 
 
 data ProjectStatus = Active | Archived
@@ -49,16 +49,16 @@ instance showProjectStatus :: Show ProjectStatus where
     show = genericShow
 
 newtype Project = Project
-    { account_id :: Number
+    { account_id :: Id Account
     , cache_ttl :: Undefined Int
     , code_revision :: Int
     , created :: DateTime
-    , dcp_service_id :: Null Number
+    , dcp_service_id :: Null (Id DCP.Service)
     , default_timezone :: NullOrUndefined String
     , enable_force_variation :: Boolean
     , exclude_disabled_experiments :: Boolean
     , exclude_names :: Null Boolean -- null ?
-    , id :: Number
+    , id :: Id Project
     , include_jquery :: Boolean
     , ip_anonymization :: Boolean
     , ip_filter :: Null String
@@ -91,7 +91,7 @@ type EditProject name =
     , exclude_names :: Undefined Boolean
     , ip_anonymization :: Undefined Boolean
     , ip_filter :: Undefined (Null String)
-    , dcp_service_id :: Undefined (Null Number)
+    , dcp_service_id :: Undefined (Null (Id DCP.Service))
     }
 
 type NewProject = EditProject String

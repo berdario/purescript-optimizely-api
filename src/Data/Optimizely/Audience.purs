@@ -27,13 +27,14 @@ import Data.List (List(..), (:))
 import Data.List.NonEmpty (NonEmptyList(..))
 import Data.Maybe (Maybe(..), maybe, maybe')
 import Data.NonEmpty (NonEmpty(..), (:|))
-import Data.Optimizely.Internal (mapWithIndex, readBoundedEnum, consNonEmptyWithList, consNonEmpty)
 import Data.Traversable (sequence, traverse)
 import Global.Unsafe (unsafeStringify)
 import Network.HTTP.Affjax (URL)
 import Partial.Unsafe (unsafePartialBecause)
 
-foreignOptions = defaultOptions{unwrapSingleConstructors=true}
+import Data.Optimizely (Project(..))
+import Data.Optimizely.Common (Account, Id(..), foreignOptions)
+import Data.Optimizely.Internal (mapWithIndex, readBoundedEnum, consNonEmptyWithList, consNonEmpty)
 
 foreignsError :: forall t. Foldable t => String -> t Foreign -> ForeignError
 foreignsError errString fs = ForeignError $ errString <> (unsafeStringify $ fromFoldable fs)
@@ -92,8 +93,8 @@ instance isForeignRootCondition :: IsForeign RootCondition where
 
 newtype Audience = Audience
     { description :: String
-    , project_id :: Number
-    , id :: Number
+    , project_id :: Id Project
+    , id :: Id Audience
     , name :: String
     , created :: DateTime
     , conditions :: RootCondition
@@ -147,9 +148,9 @@ newtype TargetingList = TargetingList
     , description :: String
     , list_type :: ListType
     , key_fields :: String
-    , id :: Number
-    , project_id :: Number
-    , account_id :: Number
+    , id :: Id TargetingList
+    , project_id :: Id Project
+    , account_id :: Id Account
     , format :: String
     }
 derive instance genericTargetingList :: Generic TargetingList _
@@ -165,7 +166,7 @@ newtype Dimension = Dimension
     { name :: String
     , last_modified :: DateTime
     , client_api_name :: String
-    , id :: Number
+    , id :: Id Dimension
     , description :: String
     }
 derive instance genericDimension :: Generic Dimension _

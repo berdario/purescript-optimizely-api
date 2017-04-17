@@ -22,9 +22,10 @@ import Data.List.NonEmpty (NonEmptyList(..))
 import Data.Maybe (Maybe(..), maybe')
 import Network.HTTP.Affjax (URL)
 
-import Data.Optimizely.Common (MatchType)
-
-foreignOptions = defaultOptions{unwrapSingleConstructors=true}
+import Data.Optimizely (Project(..))
+import Data.Optimizely.Audience (Audience(..))
+import Data.Optimizely.Common (Id(..), Section, foreignOptions)
+import Data.Optimizely.Experiment.Internal (MatchType, UrlMatchType, GoalType)
 
 data ExperimentStatus = Running | Paused | NotStarted | Archived
 derive instance genericExperimentStatus :: Generic ExperimentStatus _
@@ -93,12 +94,12 @@ instance showExperimentType :: Show ExperimentType where
 
 
 newtype Experiment = Experiment
-    { id :: Number
+    { id :: Id Experiment
     , percentage_included :: Int
     , display_goal_order_lst :: Array Number
     , is_multivariate :: Boolean
-    , project_id :: Number
-    , variation_ids :: Array Number
+    , project_id :: Id Project
+    , variation_ids :: Array (Id Variation)
     , status :: ExperimentStatus
     , url_conditions :: Array Condition
     , description :: String
@@ -108,11 +109,11 @@ newtype Experiment = Experiment
     , custom_css :: String
     , created :: DateTime
     , custom_js :: String
-    , primary_goal_id :: Null Number
+    , primary_goal_id :: Null (Id Goal)
     , experiment_type :: ExperimentType
     , shareable_results_link :: URL
     , edit_url :: URL
-    , audience_ids :: Array Number
+    , audience_ids :: Array (Id Audience)
     }
 derive instance genericExperiment :: Generic Experiment _
 
@@ -120,4 +121,54 @@ instance foreignExperiment :: IsForeign Experiment where
     read = readGeneric foreignOptions
 
 instance showExperiment :: Show Experiment where
+    show = genericShow
+
+
+newtype Variation = Variation
+    { is_paused :: Boolean
+    , description :: String
+    , weight :: Int
+    , created :: DateTime
+    , section_id :: Null (Id Section)
+    , js_component :: String
+    , experiment_id :: Id Experiment
+    , project_id :: Id Project
+    , id :: Id Variation
+    }
+derive instance genericVariation :: Generic Variation _
+
+instance foreignVariation :: IsForeign Variation where
+    read = readGeneric foreignOptions
+
+instance showVariation :: Show Variation where
+    show = genericShow
+
+
+
+
+newtype Goal = Goal
+    { is_editable :: Null Boolean
+    , target_to_experiments :: Boolean
+    , archived :: Boolean
+    , description :: String
+    , id :: Id Goal
+    , target_urls :: Array String
+    , title :: String
+    , event :: String
+    , url_match_types :: Array UrlMatchType
+    , project_id :: Id Project
+    , goal_type :: GoalType
+    , experiment_ids :: Array (Id Experiment)
+    , selector :: String
+    , created :: DateTime
+    , last_modified :: DateTime
+    , target_url_match_types :: Array UrlMatchType
+    , urls :: Array URL
+    }
+derive instance genericGoal :: Generic Goal _
+
+instance foreignGoal :: IsForeign Goal where
+    read = readGeneric foreignOptions
+
+instance showGoal :: Show Goal where
     show = genericShow
