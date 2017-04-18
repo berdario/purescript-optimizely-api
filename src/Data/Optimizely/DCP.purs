@@ -1,14 +1,15 @@
-module Data.Optimizely.DCP
-    ( Service(..)
-    , LocatorName
-    , unsafeLocatorName
-    , locatorName
-    , LocatorType(..)
-    , Datasource(..)
-    , AttributeType(..)
-    , DateTimeFormat(..)
-    , DatasourceAttribute(..)
-    ) where
+module Data.Optimizely.DCP where
+    -- ( Service(..)
+    -- , LocatorName
+    -- , unsafeLocatorName
+    -- , locatorName
+    -- , LocatorType(..)
+    -- , Datasource(..)
+    -- , AttributeType(..)
+    -- , DateTimeFormat(..)
+    -- , DatasourceAttribute(..)
+
+    -- ) where
 
 import Prelude
 import Data.DateTime as D
@@ -22,7 +23,7 @@ import Data.DateTime.Foreign (DateTime)
 import Data.Either (Either(..))
 import Data.Enum (class BoundedEnum, class Enum, Cardinality(..), toEnum, fromEnum)
 import Data.Foreign (F, Foreign, ForeignError(..), fail, readInt, readString)
-import Data.Foreign.Class (class IsForeign, read)
+import Data.Foreign.Class (class IsForeign, read, readJSON)
 import Data.Foreign.Generic (toForeignGeneric, defaultOptions, readGeneric)
 import Data.Foreign.Null (Null(..))
 import Data.Foreign.Undefined (Undefined(..))
@@ -31,12 +32,11 @@ import Data.Generic.Rep.Show (genericShow)
 import Data.JSDate (fromDateTime, parse, toDateTime, toISOString)
 import Data.List.NonEmpty (NonEmptyList(..))
 import Data.Maybe (Maybe(..), maybe')
+import Data.Optimizely.Common (Account, Id(..), foreignOptions)
 import Data.String.Regex (test)
 import Data.String.Regex.Flags (noFlags)
 import Data.String.Regex.Unsafe (unsafeRegex)
 import Network.HTTP.Affjax (URL)
-
-import Data.Optimizely.Common (Account, Id(..), foreignOptions)
 
 newtype Service = Service
     { id :: Id Service
@@ -122,21 +122,27 @@ instance foreignDatasource :: IsForeign Datasource where
 instance showDatasource :: Show Datasource where
     show = genericShow
 
-data AttributeType = AString | ABool | ALong | ADouble | ADateTime
-derive instance genericAttributeType :: Generic AttributeType _
+data AttributeType t = AString | ABool | ALong | ADouble | ADateTime
+derive instance genericAttributeType :: Generic (AttributeType t) _
 
-instance foreignAttributeType :: IsForeign AttributeType where
+instance foreignAttributeTypeOther :: IsForeign (AttributeType OtherType') where
     read value = parseStatus =<< readString value
         where
             parseStatus "string" = pure AString
             parseStatus "bool" = pure ABool
             parseStatus "long" = pure ALong
             parseStatus "double" = pure ADouble
+            parseStatus val = error val
+            error val = fail $ ForeignError $ "Expected string, bool, long, double, found " <> val
+
+instance foreignAttributeTypeDate :: IsForeign (AttributeType DateTimeType') where
+    read value = parseStatus =<< readString value
+        where
             parseStatus "datetime" = pure ADateTime
             parseStatus val = error val
-            error val = fail $ ForeignError $ "Expected string, bool, long, double, datetime, found " <> val
+            error val = fail $ ForeignError $ "Expected datetime, found " <> val
 
-instance showAttributeType :: Show AttributeType where
+instance showAttributeType :: Show (AttributeType t) where
     show = genericShow
 
 data DateTimeFormat = DateFormat | DateTimeFormat | EpochFormat
@@ -154,23 +160,30 @@ instance foreignDateTimeFormat :: IsForeign DateTimeFormat where
 instance showDateTimeFormat :: Show DateTimeFormat where
     show = genericShow
 
+class DSF at f | at -> f
 
-newtype DatasourceAttribute = DatasourceAttribute
+data DateTimeType'
+data OtherType'
+
+instance dsfDateTime :: DSF DateTimeType' DateTimeFormat
+instance dsfOther :: DSF OtherType' (Null Void)
+
+newtype DatasourceAttribute at f = DatasourceAttribute
     { archived :: Boolean
     , created :: DateTime
-    , datatype :: AttributeType
+    , datatype :: AttributeType at
     , dcp_datasource_id :: Id Datasource
     , description :: String
-    , format :: Null DateTimeFormat
-    , id :: Id DatasourceAttribute
+    , format :: f
+    , id :: Id (DatasourceAttribute at f)
     , is_value_public :: Boolean
     , last_modified :: DateTime
     , name :: String
     }
-derive instance genericDatasourceAttribute :: Generic DatasourceAttribute _
+derive instance genericDatasourceAttribute :: Generic (DatasourceAttribute at f) _
 
-instance foreignDatasourceAttribute :: IsForeign DatasourceAttribute where
+instance foreignDatasourceAttribute :: (DSF at f, IsForeign (AttributeType at), IsForeign f) => IsForeign (DatasourceAttribute at f) where
     read = readGeneric foreignOptions
 
-instance showDatasourceAttribute :: Show DatasourceAttribute where
+instance showDatasourceAttribute :: (Show f) => Show (DatasourceAttribute at f) where
     show = genericShow
