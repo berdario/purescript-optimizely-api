@@ -106,6 +106,15 @@ instance asForeignNewProject :: AsForeign MkNewProject where
 instance requestableNewProject :: Requestable MkNewProject where
     toRequest = foreignToRequest
 
+newtype MkPutProject = MkPutProject PutProject
+derive instance genericPutProject :: Generic MkPutProject _
+
+instance asForeignPutProject :: AsForeign MkPutProject where
+    write = toForeignGeneric foreignOptions
+
+instance requestablePutProject :: Requestable MkPutProject where
+    toRequest = foreignToRequest
+
 emptyProject :: PutProject
 emptyProject =
     { project_name : Undefined Nothing

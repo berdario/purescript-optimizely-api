@@ -14,7 +14,9 @@
     "purescript-console": "^2.0.0",
     "purescript-foreign-generic": "^3.0.0",
     "purescript-foreign-datetime": "^1.0.0",
-    "purescript-affjax": "^3.0.2"
+    "purescript-affjax": "^3.0.2",
+    "purescript-int-53": "^2.1.1",
+    "purescript-these": "2.0.0"
   },
   "devDependencies": {
     "purescript-psci-support": "^2.0.0",

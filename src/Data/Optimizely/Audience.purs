@@ -16,7 +16,7 @@ import Data.Either (Either(..))
 import Data.Enum (class BoundedEnum, class Enum, Cardinality(..), toEnum, fromEnum)
 import Data.Foldable (class Foldable)
 import Data.Foreign (F, Foreign, ForeignError(..), fail, readArray, readInt, readString, toForeign)
-import Data.Foreign.Class (class IsForeign, read)
+import Data.Foreign.Class (class IsForeign, read, class AsForeign, write)
 import Data.Foreign.Generic (defaultOptions, readGeneric, toForeignGeneric)
 import Data.Foreign.Null (Null)
 import Data.Foreign.Undefined (Undefined(..))
@@ -30,10 +30,11 @@ import Data.NonEmpty (NonEmpty(..), (:|))
 import Data.Traversable (sequence, traverse)
 import Global.Unsafe (unsafeStringify)
 import Network.HTTP.Affjax (URL)
+import Network.HTTP.Affjax.Request (class Requestable, toRequest)
 import Partial.Unsafe (unsafePartialBecause)
 
 import Data.Optimizely (Project(..))
-import Data.Optimizely.Common (Account, Id(..), foreignOptions)
+import Data.Optimizely.Common (Account, Id(..), foreignOptions, foreignToRequest)
 import Data.Optimizely.Internal (mapWithIndex, readBoundedEnum, consNonEmptyWithList, consNonEmpty)
 
 foreignsError :: forall t. Foldable t => String -> t Foreign -> ForeignError
@@ -81,6 +82,12 @@ readConditionExpr' "and" lst = And <$> traverseRead lst
 readConditionExpr' "or" lst = Or <$> traverseRead lst
 readConditionExpr' other lst = fail $ foreignsError "Condition operator should be 'and', 'or' or 'not', but the Condition list was " $ consNonEmpty (toForeign other) lst
 
+instance asForeignCondition :: AsForeign Condition where
+    write (Not c) = write [write "not", write c]
+    write (And cs) = write $ fromFoldable (write "and" `consNonEmpty` map write cs)
+    write (Or cs) = write $ fromFoldable (write "or" `consNonEmpty` map write cs)
+    write (Rule r) = write $ Internal.Rule r
+
 newtype RootCondition = RootCondition Condition
 
 derive newtype instance showRootCondition :: Show RootCondition
@@ -90,6 +97,13 @@ instance isForeignRootCondition :: IsForeign RootCondition where
         nestedJSON <- readString val
         lst <- toUnfoldable <$> read val
         RootCondition <$> readConditionExpr lst
+
+nestedWrite :: forall a. AsForeign a => a -> Foreign
+nestedWrite = write <<< unsafeStringify <<< write
+
+instance asForeignRootCondition :: AsForeign RootCondition where
+    write (RootCondition (Rule r)) = nestedWrite $ And $ NEL.singleton (Rule r)
+    write (RootCondition cond) = nestedWrite cond
 
 newtype Audience = Audience
     { description :: String
@@ -109,6 +123,36 @@ instance foreignAudience :: IsForeign Audience where
 
 instance showAudience :: Show Audience where
     show = genericShow
+
+type EditAudience name =
+    { name :: name
+    , description :: Undefined String
+    , conditions :: Undefined RootCondition
+    , segmentation :: Undefined Boolean
+    }
+
+type NewAudience = EditAudience String
+type PutAudience = EditAudience (Undefined String)
+
+newtype MkNewAudience = MkNewAudience NewAudience
+derive instance genericNewAudience :: Generic MkNewAudience _
+
+instance asForeignNewAudience :: AsForeign MkNewAudience where
+    write = toForeignGeneric foreignOptions
+
+instance requestableNewAudience :: Requestable MkNewAudience where
+    toRequest = foreignToRequest
+
+newtype MkPutAudience = MkPutAudience PutAudience
+derive instance genericPutAudience :: Generic MkPutAudience _
+
+instance asForeignPutAudience :: AsForeign MkPutAudience where
+    write = toForeignGeneric foreignOptions
+
+instance requestablePutAudience :: Requestable MkPutAudience where
+    toRequest = foreignToRequest
+
+
 
 data ListType = Cookie | QueryParameter | ZipCode
 derive instance eqListType :: Eq ListType
@@ -139,6 +183,9 @@ instance boundedEnumListType :: BoundedEnum ListType where
 instance foreignListType :: IsForeign ListType where
     read = readBoundedEnum
 
+instance asForeignListType :: AsForeign ListType where
+    write = write <<< fromEnum
+
 instance showListType :: Show ListType where
     show = genericShow
 
@@ -161,6 +208,32 @@ instance foreignTargetingList :: IsForeign TargetingList where
 instance showTargetingList :: Show TargetingList where
     show = genericShow
 
+type EditTargetingList = forall r.
+    { name :: String -- only characters, numbers, hyphens, and underscores.
+    , list_type :: ListType
+    , list_content :: String
+    , description :: Undefined String
+    | r
+    }
+
+newtype MkEditTargetingList = MkEditTargetingList
+    { name :: String
+    , list_type :: ListType
+    , list_content :: String
+    , description :: Undefined String
+    , format :: String
+    }
+
+mkEditTargetingList :: EditTargetingList -> MkEditTargetingList
+mkEditTargetingList r = MkEditTargetingList r{format="csv"}
+
+derive instance genericEditTargetingList :: Generic MkEditTargetingList _
+
+instance asForeignEditTargetingList :: AsForeign MkEditTargetingList where
+    write = toForeignGeneric foreignOptions
+
+instance requestableEditTargetingList :: Requestable MkEditTargetingList where
+    toRequest = foreignToRequest
 
 newtype Dimension = Dimension
     { name :: String
@@ -176,6 +249,34 @@ instance foreignDimension :: IsForeign Dimension where
 
 instance showDimension :: Show Dimension where
     show = genericShow
+
+type EditDimension name =
+    { name :: name
+    , client_api_name :: Undefined String
+    , description :: Undefined String
+    }
+
+type NewDimension = EditDimension String
+type PutDimension = EditDimension (Undefined String)
+
+newtype MkNewDimension = MkNewDimension NewDimension
+derive instance genericNewDimension :: Generic MkNewDimension _
+
+instance asForeignNewDimension :: AsForeign MkNewDimension where
+    write = toForeignGeneric foreignOptions
+
+instance requestableNewDimension :: Requestable MkNewDimension where
+    toRequest = foreignToRequest
+
+newtype MkPutDimension = MkPutDimension PutDimension
+derive instance genericPutDimension :: Generic MkPutDimension _
+
+instance asForeignPutDimension :: AsForeign MkPutDimension where
+    write = toForeignGeneric foreignOptions
+
+instance requestablePutDimension :: Requestable MkPutDimension where
+    toRequest = foreignToRequest
+
 
 
 

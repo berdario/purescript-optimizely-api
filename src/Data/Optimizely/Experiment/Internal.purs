@@ -65,6 +65,9 @@ instance boundedEnumGoalType :: BoundedEnum GoalType where
 instance foreignGoalType :: IsForeign GoalType where
     read = readBoundedEnum
 
+instance asForeignGoalType :: AsForeign GoalType where
+    write = write <<< fromEnum
+
 instance showGoalType :: Show GoalType where
     show = genericShow
 
@@ -83,6 +86,12 @@ instance foreignMatchType :: IsForeign MatchType where
             parseStatus "substring" = pure Substring
             parseStatus val = error val
             error val = fail $ ForeignError $ "Expected simple, regex, exact, substring, found " <> val
+
+instance asForeignMatchType :: AsForeign MatchType where
+    write Simple = write "simple"
+    write Regex = write "regex"
+    write Exact = write "exact"
+    write Substring = write "substring"
 
 instance showMatchType :: Show MatchType where
     show = genericShow
@@ -116,3 +125,6 @@ instance boundedEnumUrlMatchType :: BoundedEnum UrlMatchType where
 
 instance foreignUrlMatchType :: IsForeign UrlMatchType where
     read = readBoundedEnum
+
+instance asForeignUrlMatchType :: AsForeign UrlMatchType where
+    write = write <<< fromEnum

@@ -10,10 +10,10 @@ import Data.BooleanAlgebra (class BooleanAlgebra)
 import Data.DateTime.Foreign (DateTime)
 import Data.Either (Either(..))
 import Data.Enum (class BoundedEnum, class Enum, Cardinality(..), toEnum, fromEnum)
-import Data.Foreign (F, Foreign, ForeignError(..), fail, readInt, readString)
-import Data.Foreign.Class (class AsForeign, class IsForeign, read, write)
+import Data.Foreign (F, Foreign, ForeignError(..), fail, readInt, readString, writeObject)
+import Data.Foreign.Class (class AsForeign, class IsForeign, read, write, writeProp)
 import Data.Foreign.Generic (toForeignGeneric, defaultOptions, readGeneric)
-import Data.Foreign.Null (Null)
+import Data.Foreign.Null (Null(..))
 import Data.Foreign.Undefined (Undefined(..))
 import Data.Generic.Rep (class Generic)
 import Data.Generic.Rep.Show (genericShow)
@@ -22,13 +22,15 @@ import Data.List.NonEmpty (NonEmptyList(..))
 import Data.Maybe (Maybe(..), maybe')
 import Data.MediaType (MediaType(..))
 import Data.MediaType.Common (applicationJSON)
+import Data.These (These, theseLeft, theseRight)
 import Data.Tuple (Tuple(..))
 import Global.Unsafe (unsafeStringify)
 import Network.HTTP.Affjax (URL)
 import Network.HTTP.Affjax.Request (RequestContent)
+import Network.HTTP.Affjax.Request (class Requestable, toRequest)
 import Unsafe.Coerce (unsafeCoerce)
 
-import Data.Optimizely.Common (Id(..), foreignOptions)
+import Data.Optimizely.Common (Id(..), foreignOptions, foreignToRequest)
 import Data.Optimizely.Experiment (Experiment(..))
 
 data ScheduleStatus = Active | Inactive
@@ -59,3 +61,14 @@ instance foreignSchedule :: IsForeign Schedule where
 
 instance showSchedule :: Show Schedule where
     show = genericShow
+
+newtype EditSchedule = EditSchedule (These DateTime DateTime)
+
+instance asForeignEditSchedule :: AsForeign EditSchedule where
+    write (EditSchedule dates) =
+        writeObject [ writeProp "start_time" (Null (theseLeft dates))
+                    , writeProp "stop_time" (Null (theseRight dates))
+                    ]
+
+instance requestableEditSchedule :: Requestable EditSchedule where
+    toRequest = foreignToRequest

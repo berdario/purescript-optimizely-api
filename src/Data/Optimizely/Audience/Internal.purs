@@ -14,7 +14,7 @@ import Data.Either (Either(..))
 import Data.Enum (class BoundedEnum, class Enum, Cardinality(..), toEnum, fromEnum)
 import Data.Foldable (class Foldable)
 import Data.Foreign (F, Foreign, ForeignError(..), fail, readArray, readInt, readString, toForeign)
-import Data.Foreign.Class (class IsForeign, read)
+import Data.Foreign.Class (class IsForeign, read, class AsForeign, write)
 import Data.Foreign.Generic (defaultOptions, readGeneric, toForeignGeneric)
 import Data.Foreign.Null (Null)
 import Data.Foreign.Undefined (Undefined(..))
@@ -46,6 +46,9 @@ derive instance genericRule :: Generic Rule _
 
 instance isForeignRule :: IsForeign Rule where
     read = readGeneric foreignOptions
+
+instance asForeignRule :: AsForeign Rule where
+    write = toForeignGeneric foreignOptions
 
 instance showRule :: Show Rule where
     show = genericShow

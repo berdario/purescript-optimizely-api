@@ -6,12 +6,13 @@ import Data.List.NonEmpty as NEL
 import Control.Bind ((=<<))
 import Control.Monad.Eff.Unsafe (unsafePerformEff)
 import Control.Monad.Except (throwError)
+import Data.Array (fromFoldable)
 import Data.BooleanAlgebra (class BooleanAlgebra)
 import Data.DateTime.Foreign (DateTime)
 import Data.Either (Either(..))
 import Data.Enum (class BoundedEnum, class Enum, Cardinality(..), toEnum, fromEnum)
 import Data.Foreign (F, Foreign, ForeignError(..), fail, readInt, readString)
-import Data.Foreign.Class (class IsForeign, read)
+import Data.Foreign.Class (class IsForeign, read, class AsForeign, write)
 import Data.Foreign.Generic (toForeignGeneric, defaultOptions, readGeneric)
 import Data.Foreign.Null (Null)
 import Data.Foreign.Undefined (Undefined(..))
@@ -20,12 +21,12 @@ import Data.Generic.Rep.Show (genericShow)
 import Data.JSDate (fromDateTime, parse, toDateTime, toISOString)
 import Data.List.NonEmpty (NonEmptyList(..))
 import Data.Maybe (Maybe(..), maybe')
-import Network.HTTP.Affjax (URL)
-
 import Data.Optimizely (Project(..))
 import Data.Optimizely.Audience (Audience(..))
-import Data.Optimizely.Common (Id(..), Section, foreignOptions)
-import Data.Optimizely.Experiment.Internal (MatchType, UrlMatchType, GoalType)
+import Data.Optimizely.Common (Id(..), Section, foreignOptions, foreignToRequest)
+import Data.Optimizely.Experiment.Internal (GoalType(..), MatchType, UrlMatchType)
+import Network.HTTP.Affjax (URL)
+import Network.HTTP.Affjax.Request (class Requestable, toRequest)
 
 data ExperimentStatus = Running | Paused | NotStarted | Archived
 derive instance genericExperimentStatus :: Generic ExperimentStatus _
@@ -39,6 +40,12 @@ instance foreignExperimentStatus :: IsForeign ExperimentStatus where
             parseStatus "Archived" = pure Archived
             parseStatus val = error val
             error val = fail $ ForeignError $ "Expected Running, Paused, \"Not started\", Archived, found " <> val
+
+instance asForeignExperimentStatus :: AsForeign ExperimentStatus where
+    write Running = write "Running"
+    write Paused = write "Paused"
+    write NotStarted = write "Not started"
+    write Archived = write "Archived"
 
 instance showExperimentStatus :: Show ExperimentStatus where
     show = genericShow
@@ -56,6 +63,9 @@ derive instance genericCondition :: Generic Condition _
 instance foreignCondition :: IsForeign Condition where
     read = readGeneric foreignOptions
 
+instance asForeignCondition :: AsForeign Condition where
+    write = toForeignGeneric foreignOptions
+
 instance showCondition :: Show Condition where
     show = genericShow
 
@@ -71,6 +81,11 @@ instance foreignActivationMode :: IsForeign ActivationMode where
             parseStatus "conditional" = pure Conditional
             parseStatus val = error val
             error val = fail $ ForeignError $ "Expected immediate, manual, conditional, found " <> val
+
+instance asForeignActivationMode :: AsForeign ActivationMode where
+    write Immediate = write "immediate"
+    write Manual = write "manual"
+    write Conditional = write "conditional"
 
 instance showActivationMode :: Show ActivationMode where
     show = genericShow
@@ -123,6 +138,39 @@ instance foreignExperiment :: IsForeign Experiment where
 instance showExperiment :: Show Experiment where
     show = genericShow
 
+type EditExperiment desc edit_url =
+    { description :: desc
+    , edit_url :: edit_url
+    , audience_ids :: Undefined (Array (Id Audience))
+    , activation_mode :: Undefined ActivationMode
+    , status :: Undefined ExperimentStatus
+    , custom_css :: Undefined String
+    , custom_js :: Undefined String
+    , percentage_included :: Undefined Int
+    , url_conditions :: Undefined (Array Condition)
+    }
+
+type NewExperiment = EditExperiment String URL
+type PutExperiment = EditExperiment (Undefined String) (Undefined URL)
+
+newtype MkNewExperiment = MkNewExperiment NewExperiment
+derive instance genericNewExperiment :: Generic MkNewExperiment _
+
+instance asForeignNewExperiment :: AsForeign MkNewExperiment where
+    write = toForeignGeneric foreignOptions
+
+instance requestableNewExperiment :: Requestable MkNewExperiment where
+    toRequest = foreignToRequest
+
+newtype MkPutExperiment = MkPutExperiment PutExperiment
+derive instance genericPutExperiment :: Generic MkPutExperiment _
+
+instance asForeignPutExperiment :: AsForeign MkPutExperiment where
+    write = toForeignGeneric foreignOptions
+
+instance requestablePutExperiment :: Requestable MkPutExperiment where
+    toRequest = foreignToRequest
+
 
 newtype Variation = Variation
     { is_paused :: Boolean
@@ -143,6 +191,34 @@ instance foreignVariation :: IsForeign Variation where
 instance showVariation :: Show Variation where
     show = genericShow
 
+type EditVariation desc =
+    { description :: desc
+    , is_paused :: Undefined Boolean
+    , js_component :: Undefined String
+    , weight :: Undefined Int
+    }
+
+type NewVariation = EditVariation String
+type PutVariation = EditVariation (Undefined String)
+
+newtype MkNewVariation = MkNewVariation NewVariation
+derive instance genericNewVariation :: Generic MkNewVariation _
+
+instance asForeignNewVariation :: AsForeign MkNewVariation where
+    write = toForeignGeneric foreignOptions
+
+instance requestableNewVariation :: Requestable MkNewVariation where
+    toRequest = foreignToRequest
+
+newtype MkPutVariation = MkPutVariation PutVariation
+derive instance genericPutVariation :: Generic MkPutVariation _
+
+instance asForeignPutVariation :: AsForeign MkPutVariation where
+    write = toForeignGeneric foreignOptions
+
+instance requestablePutVariation :: Requestable MkPutVariation where
+    toRequest = foreignToRequest
+
 
 
 
@@ -154,7 +230,7 @@ newtype Goal = Goal
     , id :: Id Goal
     , target_urls :: Array String
     , title :: String
-    , event :: String
+    , event :: Null String
     , url_match_types :: Array UrlMatchType
     , project_id :: Id Project
     , goal_type :: GoalType
@@ -172,3 +248,82 @@ instance foreignGoal :: IsForeign Goal where
 
 instance showGoal :: Show Goal where
     show = genericShow
+
+data NewGoal = NewGoal String NewGoalFields
+
+data NewGoalFields
+    = NewClick String
+               (Maybe { target_urls :: Array String
+                      , target_url_match_types :: Array UrlMatchType})
+    | NewPageView (NonEmptyList URL)
+                  (NonEmptyList UrlMatchType)
+    | NewCustom String
+
+type PutGoal =
+    { archived :: Undefined Boolean
+    , description :: Undefined String
+    , experiment_ids :: Undefined (Array (Id Experiment))
+    , goal_type :: Undefined GoalType
+    , selector :: Undefined String
+    , target_to_experiments :: Undefined Boolean
+    , target_urls :: Undefined (Array String)
+    , target_url_match_types :: Undefined (Array UrlMatchType)
+    , title :: Undefined String
+    , urls :: Undefined (Array URL)
+    , url_match_types :: Undefined (Array UrlMatchType)
+    , event :: Undefined String
+    }
+
+emptyNewGoal :: PutGoal
+emptyNewGoal =
+    { archived : Undefined Nothing
+    , description : Undefined Nothing
+    , experiment_ids : Undefined Nothing
+    , goal_type : Undefined Nothing
+    , selector : Undefined Nothing
+    , target_to_experiments : Undefined Nothing
+    , target_urls : Undefined Nothing
+    , target_url_match_types : Undefined Nothing
+    , title : Undefined Nothing
+    , urls : Undefined Nothing
+    , url_match_types : Undefined Nothing
+    , event : Undefined Nothing
+    }
+
+just :: forall a. a -> Undefined a
+just = Undefined <<< Just
+
+putNewGoal :: NewGoal -> MkPutGoal
+putNewGoal (NewGoal title newgoal) = newGoalFields emptyNewGoal{title=just title} newgoal
+
+newGoalFields :: PutGoal -> NewGoalFields -> MkPutGoal
+newGoalFields record (NewClick selector Nothing)
+    = MkPutGoal record{ goal_type=just Click
+                      , selector=just selector
+                      , target_to_experiments=just true
+                      }
+newGoalFields record (NewClick selector (Just {target_urls, target_url_match_types}))
+    = MkPutGoal record{ goal_type=just Click
+                      , selector=just selector
+                      , target_to_experiments=just false
+                      , target_urls=just target_urls
+                      , target_url_match_types=just target_url_match_types
+                      }
+newGoalFields record (NewPageView urls url_match_types)
+    = MkPutGoal record{ goal_type=just PageViews
+                      , urls=just $ fromFoldable urls
+                      , url_match_types=just $ fromFoldable url_match_types
+                      }
+newGoalFields record (NewCustom event)
+    = MkPutGoal record{ goal_type=just CustomEvent
+                      , event=just event
+                      }
+
+newtype MkPutGoal = MkPutGoal PutGoal
+derive instance genericPutGoal :: Generic MkPutGoal _
+
+instance asForeignPutGoal :: AsForeign MkPutGoal where
+    write = toForeignGeneric foreignOptions
+
+instance requestablePutGoal :: Requestable MkPutGoal where
+    toRequest = foreignToRequest
