@@ -1,6 +1,10 @@
 {
   "name": "purescript-optimizely-api",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/berdario/purescript-optimizely-api.git"
+  },
   "ignore": [
     "**/.*",
     "node_modules",
