@@ -21,12 +21,15 @@ import Data.Generic.Rep.Show (genericShow)
 import Data.JSDate (fromDateTime, parse, toDateTime, toISOString)
 import Data.List.NonEmpty (NonEmptyList(..))
 import Data.Maybe (Maybe(..), maybe')
+import Data.Newtype (class Newtype)
+import Network.HTTP.Affjax (URL)
+import Network.HTTP.Affjax.Request (class Requestable, toRequest)
+
 import Data.Optimizely.Project (Project(..))
 import Data.Optimizely.Audience (Audience(..))
 import Data.Optimizely.Common (Id(..), Section, foreignOptions, foreignToRequest)
 import Data.Optimizely.Experiment.Internal (GoalType(..), MatchType, UrlMatchType)
-import Network.HTTP.Affjax (URL)
-import Network.HTTP.Affjax.Request (class Requestable, toRequest)
+
 
 data ExperimentStatus = Running | Paused | NotStarted | Archived
 derive instance genericExperimentStatus :: Generic ExperimentStatus _
@@ -131,6 +134,7 @@ newtype Experiment = Experiment
     , audience_ids :: Array (Id Audience)
     }
 derive instance genericExperiment :: Generic Experiment _
+derive instance newtypeExperiment :: Newtype Experiment _
 
 instance foreignExperiment :: IsForeign Experiment where
     read = readGeneric foreignOptions
@@ -184,6 +188,7 @@ newtype Variation = Variation
     , id :: Id Variation
     }
 derive instance genericVariation :: Generic Variation _
+derive instance newtypeVariation :: Newtype Variation _
 
 instance foreignVariation :: IsForeign Variation where
     read = readGeneric foreignOptions
@@ -242,6 +247,7 @@ newtype Goal = Goal
     , urls :: Array URL
     }
 derive instance genericGoal :: Generic Goal _
+derive instance newtypeGoal :: Newtype Goal _
 
 instance foreignGoal :: IsForeign Goal where
     read = readGeneric foreignOptions

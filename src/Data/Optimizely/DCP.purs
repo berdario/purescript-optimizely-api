@@ -40,12 +40,14 @@ import Data.Generic.Rep.Show (genericShow)
 import Data.JSDate (fromDateTime, parse, toDateTime, toISOString)
 import Data.List.NonEmpty (NonEmptyList(..))
 import Data.Maybe (Maybe(..), maybe')
-import Data.Optimizely.Common (Account, Id(..), foreignOptions, foreignToRequest)
+import Data.Newtype (class Newtype)
 import Data.String.Regex (test)
 import Data.String.Regex.Flags (noFlags)
 import Data.String.Regex.Unsafe (unsafeRegex)
 import Network.HTTP.Affjax (URL)
 import Network.HTTP.Affjax.Request (class Requestable, toRequest)
+
+import Data.Optimizely.Common (Account, Id(..), foreignOptions, foreignToRequest)
 
 newtype Service = Service
     { id :: Id Service
@@ -59,6 +61,7 @@ newtype Service = Service
     , s3_path :: String
     }
 derive instance genericService :: Generic Service _
+derive instance newtypeService :: Newtype Service _
 
 instance foreignService :: IsForeign Service where
     read = readGeneric foreignOptions
@@ -141,6 +144,7 @@ newtype Datasource = Datasource
     , s3_path :: String
     }
 derive instance genericDatasource :: Generic Datasource _
+derive instance newtypeDatasource :: Newtype Datasource _
 
 instance foreignDatasource :: IsForeign Datasource where
     read = readGeneric foreignOptions
@@ -234,6 +238,7 @@ newtype DatasourceAttribute = DatasourceAttribute
     , name :: String
     }
 derive instance genericDatasourceAttribute :: Generic DatasourceAttribute _
+derive instance newtypeDatasourceAttribute :: Newtype DatasourceAttribute _
 
 instance foreignDatasourceAttribute :: IsForeign DatasourceAttribute where
     read = readGeneric foreignOptions

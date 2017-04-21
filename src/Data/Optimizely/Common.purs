@@ -23,6 +23,7 @@ import Data.List.NonEmpty (NonEmptyList(..))
 import Data.Maybe (Maybe(..), maybe)
 import Data.MediaType (MediaType(..))
 import Data.MediaType.Common (applicationJSON)
+import Data.Newtype (class Newtype)
 import Data.Tuple (Tuple(..))
 import Global.Unsafe (unsafeStringify)
 import Network.HTTP.Affjax (URL)
@@ -39,6 +40,7 @@ foreignToRequest x = Tuple (Just applicationJSON) $ unsafeCoerce $ unsafeStringi
 newtype Id a = Id Int53
 derive newtype instance eqId :: Eq (Id a)
 derive newtype instance ordId :: Ord (Id a)
+derive instance newtypeId :: Newtype (Id a) _
 
 instance showId :: Show (Id a) where
     show (Id x) = toString x

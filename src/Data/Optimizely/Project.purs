@@ -21,6 +21,7 @@ import Data.Generic.Rep.Show (genericShow)
 import Data.JSDate (fromDateTime, parse, toDateTime, toISOString)
 import Data.List.NonEmpty (NonEmptyList(..))
 import Data.Maybe (Maybe(..), maybe')
+import Data.Newtype (class Newtype)
 
 import Network.HTTP.Affjax (URL)
 import Network.HTTP.Affjax.Request (class Requestable, toRequest)
@@ -74,6 +75,7 @@ newtype Project = Project
     , socket_token :: String
     }
 derive instance genericProject :: Generic Project _
+derive instance newtypeProject :: Newtype Project _
 
 instance foreignProject :: IsForeign Project where
     read = readGeneric foreignOptions

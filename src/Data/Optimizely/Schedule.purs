@@ -22,6 +22,7 @@ import Data.List.NonEmpty (NonEmptyList(..))
 import Data.Maybe (Maybe(..), maybe')
 import Data.MediaType (MediaType(..))
 import Data.MediaType.Common (applicationJSON)
+import Data.Newtype (class Newtype)
 import Data.These (These, theseLeft, theseRight)
 import Data.Tuple (Tuple(..))
 import Global.Unsafe (unsafeStringify)
@@ -55,6 +56,7 @@ newtype Schedule = Schedule
     , id :: Id Schedule
     }
 derive instance genericSchedule :: Generic Schedule _
+derive instance newtypeSchedule :: Newtype Schedule _
 
 instance foreignSchedule :: IsForeign Schedule where
     read = readGeneric foreignOptions

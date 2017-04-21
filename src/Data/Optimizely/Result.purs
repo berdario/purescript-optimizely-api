@@ -20,6 +20,7 @@ import Data.Generic.Rep.Show (genericShow)
 import Data.JSDate (fromDateTime, parse, toDateTime, toISOString)
 import Data.List.NonEmpty (NonEmptyList(..))
 import Data.Maybe (Maybe(..), maybe')
+import Data.Newtype (class Newtype)
 import Network.HTTP.Affjax (URL)
 
 import Data.Optimizely.Common (Id(..), foreignOptions)
@@ -65,6 +66,7 @@ newtype Result = Result
     , is_revenue :: Boolean
     }
 derive instance genericResult :: Generic Result _
+derive instance newtypeResult :: Newtype Result _
 
 instance foreignResult :: IsForeign Result where
     read = readGeneric foreignOptions

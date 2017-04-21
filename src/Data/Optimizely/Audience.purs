@@ -25,6 +25,7 @@ import Data.JSDate (fromDateTime, parse, toDateTime, toISOString)
 import Data.List (List(..), (:))
 import Data.List.NonEmpty (NonEmptyList(..))
 import Data.Maybe (Maybe(..), maybe, maybe')
+import Data.Newtype (class Newtype)
 import Data.NonEmpty (NonEmpty(..), (:|))
 import Data.Traversable (sequence, traverse)
 import Global.Unsafe (unsafeStringify)
@@ -117,6 +118,7 @@ newtype Audience = Audience
     , archived :: Boolean
     }
 derive instance genericAudience :: Generic Audience _
+derive instance newtypeAudience :: Newtype Audience _
 
 instance foreignAudience :: IsForeign Audience where
     read = readGeneric foreignOptions
@@ -201,6 +203,7 @@ newtype TargetingList = TargetingList
     , format :: String
     }
 derive instance genericTargetingList :: Generic TargetingList _
+derive instance newtypeTargetingList :: Newtype TargetingList _
 
 instance foreignTargetingList :: IsForeign TargetingList where
     read = readGeneric foreignOptions
@@ -243,6 +246,7 @@ newtype Dimension = Dimension
     , description :: String
     }
 derive instance genericDimension :: Generic Dimension _
+derive instance newtypeDimension :: Newtype Dimension _
 
 instance foreignDimension :: IsForeign Dimension where
     read = readGeneric foreignOptions
