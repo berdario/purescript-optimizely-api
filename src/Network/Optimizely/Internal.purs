@@ -1,28 +1,17 @@
 module Network.Optimizely.Internal where
 
 import Prelude
-import Data.Optimizely
 import Control.Monad.Aff (Aff)
-import Control.Monad.Except (ExceptT(..), Except, mapExceptT, withExcept, throwError)
+import Control.Monad.Except (ExceptT, Except, mapExceptT, withExcept, throwError)
 import Control.Monad.Trans.Class (lift)
-import Data.DateTime.Foreign (DateTime)
 import Data.Either (Either(..))
-import Data.Foreign (F, Foreign, MultipleErrors)
+import Data.Foreign (Foreign, MultipleErrors)
 import Data.Foreign.Class (class IsForeign, read)
 import Data.Generic.Rep (class Generic)
 import Data.Generic.Rep.Show (genericShow)
 import Data.HTTP.Method (Method(..))
-import Data.Maybe (maybe)
-import Data.Maybe (Maybe(..), fromJust)
+import Data.Maybe (Maybe(..), maybe)
 import Data.Newtype (unwrap)
-import Data.Optimizely.Common (Id(..))
-import Data.Optimizely.Experiment (Experiment(..), NewExperiment, PutExperiment, MkNewExperiment(..), MkPutExperiment(..), Variation(..), NewVariation, PutVariation, MkNewVariation(..), MkPutVariation(..), Goal(..), NewGoal, PutGoal, putNewGoal, MkPutGoal(..))
-import Data.Optimizely.Project (NewProject, MkNewProject(..), PutProject, MkPutProject(..))
-import Data.Optimizely.Schedule (Schedule(..), EditSchedule(..))
-import Data.Optimizely.Audience (Audience, NewAudience, MkNewAudience(..), PutAudience, MkPutAudience(..), EditTargetingList, mkEditTargetingList, TargetingList, Dimension, NewDimension, MkNewDimension(..), PutDimension, MkPutDimension(..))
-import Data.Optimizely.Result (Result)
-import Data.Optimizely.DCP as DCP
-import Data.These (These)
 import Global.Unsafe (unsafeStringify)
 import Network.HTTP.Affjax (AJAX, Affjax, AffjaxRequest, AffjaxResponse, affjax, defaultRequest)
 import Network.HTTP.Affjax.Request (class Requestable)
@@ -88,5 +77,5 @@ executePost endpoint content = executeRequest <<< post endpoint content
 executePut :: forall a b eff. (Requestable a, IsForeign b) => String -> a -> Auth -> H eff b
 executePut endpoint content = executeRequest <<< put endpoint content
 
-executeDelete :: forall a eff. String -> Auth -> H eff (AffjaxResponse Unit)
+executeDelete :: forall eff. String -> Auth -> H eff (AffjaxResponse Unit)
 executeDelete endpoint = checkStatus <<< affjax <<< delete endpoint

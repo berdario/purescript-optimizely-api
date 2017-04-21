@@ -1,30 +1,16 @@
 module Data.Optimizely.Result where
 
 import Prelude
-import Data.DateTime as D
-import Data.List.NonEmpty as NEL
-import Control.Bind ((=<<))
-import Control.Monad.Eff.Unsafe (unsafePerformEff)
-import Control.Monad.Except (throwError)
-import Data.BooleanAlgebra (class BooleanAlgebra)
 import Data.DateTime.Foreign (DateTime)
-import Data.Either (Either(..))
-import Data.Enum (class BoundedEnum, class Enum, Cardinality(..), toEnum, fromEnum)
-import Data.Foreign (F, Foreign, ForeignError(..), fail, readInt, readString)
-import Data.Foreign.Class (class IsForeign, read)
-import Data.Foreign.Generic (toForeignGeneric, defaultOptions, readGeneric)
-import Data.Foreign.Null (Null)
-import Data.Foreign.Undefined (Undefined(..))
+import Data.Foreign (fail, ForeignError(..), readString)
+import Data.Foreign.Class (class IsForeign)
+import Data.Foreign.Generic (readGeneric)
 import Data.Generic.Rep (class Generic)
 import Data.Generic.Rep.Show (genericShow)
-import Data.JSDate (fromDateTime, parse, toDateTime, toISOString)
-import Data.List.NonEmpty (NonEmptyList(..))
-import Data.Maybe (Maybe(..), maybe')
 import Data.Newtype (class Newtype)
-import Network.HTTP.Affjax (URL)
 
-import Data.Optimizely.Common (Id(..), foreignOptions)
-import Data.Optimizely.Experiment (Goal(..), Variation(..))
+import Data.Optimizely.Common (Id, foreignOptions)
+import Data.Optimizely.Experiment (Goal, Variation)
 
 
 data ResultStatus = Winner | Loser | Inconclusive | Baseline

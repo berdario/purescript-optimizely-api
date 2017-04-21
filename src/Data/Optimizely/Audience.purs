@@ -1,40 +1,31 @@
 module Data.Optimizely.Audience where
 
 import Prelude
-import Data.DateTime as D
-import Data.List as L
 import Data.List.NonEmpty as NEL
 import Control.Alt ((<|>))
-import Control.Bind ((=<<))
-import Control.Monad.Eff.Unsafe (unsafePerformEff)
-import Control.Monad.Except (throwError, withExcept)
+import Control.Monad.Except (withExcept)
 import Data.Array (fromFoldable, toUnfoldable)
-import Data.BooleanAlgebra (class BooleanAlgebra)
 import Data.DateTime.Foreign (DateTime)
 import Data.Either (Either(..))
 import Data.Enum (class BoundedEnum, class Enum, Cardinality(..), toEnum, fromEnum)
 import Data.Foldable (class Foldable)
-import Data.Foreign (F, Foreign, ForeignError(..), fail, readArray, readInt, readString, toForeign)
+import Data.Foreign (F, Foreign, ForeignError(..), fail, readArray, readString, toForeign)
 import Data.Foreign.Class (class IsForeign, read, class AsForeign, write)
-import Data.Foreign.Generic (defaultOptions, readGeneric, toForeignGeneric)
-import Data.Foreign.Null (Null)
-import Data.Foreign.Undefined (Undefined(..))
+import Data.Foreign.Generic (readGeneric, toForeignGeneric)
+import Data.Foreign.Undefined (Undefined)
 import Data.Generic.Rep (class Generic)
 import Data.Generic.Rep.Show (genericShow)
-import Data.JSDate (fromDateTime, parse, toDateTime, toISOString)
 import Data.List (List(..), (:))
 import Data.List.NonEmpty (NonEmptyList(..))
-import Data.Maybe (Maybe(..), maybe, maybe')
+import Data.Maybe (Maybe(..))
 import Data.Newtype (class Newtype)
-import Data.NonEmpty (NonEmpty(..), (:|))
-import Data.Traversable (sequence, traverse)
+import Data.NonEmpty (NonEmpty(..))
+import Data.Traversable (sequence)
 import Global.Unsafe (unsafeStringify)
-import Network.HTTP.Affjax (URL)
-import Network.HTTP.Affjax.Request (class Requestable, toRequest)
-import Partial.Unsafe (unsafePartialBecause)
+import Network.HTTP.Affjax.Request (class Requestable)
 
-import Data.Optimizely.Project (Project(..))
-import Data.Optimizely.Common (Account, Id(..), foreignOptions, foreignToRequest)
+import Data.Optimizely.Project (Project)
+import Data.Optimizely.Common (Account, Id, foreignOptions, foreignToRequest)
 import Data.Optimizely.Internal (mapWithIndex, readBoundedEnum, consNonEmptyWithList, consNonEmpty)
 import Data.Optimizely.Audience.Internal as Internal
 

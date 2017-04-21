@@ -20,34 +20,23 @@ module Data.Optimizely.DCP
     ) where
 
 import Prelude
-import Data.DateTime as D
-import Data.List.NonEmpty as NEL
-import Control.Bind ((=<<))
-import Control.Monad.Eff.Unsafe (unsafePerformEff)
-import Control.Monad.Except (throwError)
-import DOM.HTML.HTMLTableHeaderCellElement (abbr)
-import Data.BooleanAlgebra (class BooleanAlgebra)
 import Data.DateTime.Foreign (DateTime)
-import Data.Either (Either(..))
-import Data.Enum (class BoundedEnum, class Enum, Cardinality(..), toEnum, fromEnum)
-import Data.Foreign (F, Foreign, ForeignError(..), fail, readInt, readString, writeObject)
-import Data.Foreign.Class (class IsForeign, read, writeProp, class AsForeign, write)
-import Data.Foreign.Generic (toForeignGeneric, defaultOptions, readGeneric)
+import Data.Foreign (ForeignError(..), fail, readString, writeObject)
+import Data.Foreign.Class (class IsForeign, writeProp, class AsForeign, write)
+import Data.Foreign.Generic (toForeignGeneric, readGeneric)
 import Data.Foreign.Null (Null(..))
-import Data.Foreign.Undefined (Undefined(..))
+import Data.Foreign.Undefined (Undefined)
 import Data.Generic.Rep (class Generic)
 import Data.Generic.Rep.Show (genericShow)
-import Data.JSDate (fromDateTime, parse, toDateTime, toISOString)
-import Data.List.NonEmpty (NonEmptyList(..))
-import Data.Maybe (Maybe(..), maybe')
+import Data.Maybe (Maybe(..))
 import Data.Newtype (class Newtype)
 import Data.String.Regex (test)
 import Data.String.Regex.Flags (noFlags)
 import Data.String.Regex.Unsafe (unsafeRegex)
-import Network.HTTP.Affjax (URL)
-import Network.HTTP.Affjax.Request (class Requestable, toRequest)
+import Network.HTTP.Affjax.Request (class Requestable)
 
-import Data.Optimizely.Common (Account, Id(..), foreignOptions, foreignToRequest)
+import Data.Optimizely.Common (Account, Id, foreignOptions, foreignToRequest)
+
 
 newtype Service = Service
     { id :: Id Service

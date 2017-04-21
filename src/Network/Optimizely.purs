@@ -4,35 +4,18 @@ module Network.Optimizely
     ) where
 
 import Prelude
-import Data.Optimizely
-import Control.Monad.Aff (Aff)
-import Control.Monad.Except (ExceptT(..), Except, mapExceptT, withExcept, throwError)
-import Control.Monad.Trans.Class (lift)
 import Data.DateTime.Foreign (DateTime)
-import Data.Either (Either(..))
-import Data.Foreign (F, Foreign, MultipleErrors)
-import Data.Foreign.Class (class IsForeign, read)
-import Data.Generic.Rep (class Generic)
-import Data.Generic.Rep.Show (genericShow)
-import Data.HTTP.Method (Method(..))
-import Data.Maybe (maybe)
-import Data.Maybe (Maybe(..), fromJust)
-import Data.Newtype (unwrap)
 import Data.These (These(..))
-import Global.Unsafe (unsafeStringify)
-import Network.HTTP.Affjax (AJAX, Affjax, AffjaxRequest, AffjaxResponse, affjax, defaultRequest)
-import Network.HTTP.Affjax.Request (class Requestable)
-import Network.HTTP.Affjax.Response (class Respondable)
-import Network.HTTP.StatusCode (StatusCode(..))
+import Network.HTTP.Affjax (AffjaxResponse)
 
-import Data.Optimizely.Common (Id(..))
-import Data.Optimizely.Project (Project(..), NewProject, MkNewProject(..), PutProject, MkPutProject(..))
-import Data.Optimizely.Experiment (Experiment(..), NewExperiment, PutExperiment, MkNewExperiment(..), MkPutExperiment(..), Variation(..), NewVariation, PutVariation, MkNewVariation(..), MkPutVariation(..), Goal(..), NewGoal, PutGoal, putNewGoal, MkPutGoal(..))
-import Data.Optimizely.Schedule (Schedule(..), EditSchedule(..))
+import Data.Optimizely.Common (Id)
+import Data.Optimizely.Project (Project, NewProject, MkNewProject(..), PutProject, MkPutProject(..))
+import Data.Optimizely.Experiment (Experiment, NewExperiment, PutExperiment, MkNewExperiment(..), MkPutExperiment(..), Variation, NewVariation, PutVariation, MkNewVariation(..), MkPutVariation(..), Goal, NewGoal, PutGoal, putNewGoal, MkPutGoal(..))
+import Data.Optimizely.Schedule (Schedule, EditSchedule(..))
 import Data.Optimizely.Audience (Audience, NewAudience, MkNewAudience(..), PutAudience, MkPutAudience(..), EditTargetingList, mkEditTargetingList, TargetingList, Dimension, NewDimension, MkNewDimension(..), PutDimension, MkPutDimension(..))
 import Data.Optimizely.Result (Result)
 import Data.Optimizely.DCP as DCP
-import Network.Optimizely.Auth (Auth, toHeader)
+import Network.Optimizely.Auth (Auth)
 import Network.Optimizely.Internal (OptimizelyError(..), H, get, post, put, delete, executeRequest, executeGet, executePost, executePut, executeDelete)
 
 

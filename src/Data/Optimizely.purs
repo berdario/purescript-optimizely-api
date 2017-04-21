@@ -4,8 +4,8 @@ module Data.Optimizely
     , module Data.Optimizely.Schedule
     , module Data.Optimizely.Audience
     , module Data.Optimizely.Result
-    , module Data.Optimizely.Project
     , module Data.Optimizely.DCP
+    , module Data.Optimizely.Common
     ) where
 
 import Data.Optimizely.Common (Id(..))
