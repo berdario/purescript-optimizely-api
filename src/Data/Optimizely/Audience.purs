@@ -4,7 +4,6 @@ import Prelude
 import Data.DateTime as D
 import Data.List as L
 import Data.List.NonEmpty as NEL
-import Data.Optimizely.Audience.Internal as Internal
 import Control.Alt ((<|>))
 import Control.Bind ((=<<))
 import Control.Monad.Eff.Unsafe (unsafePerformEff)
@@ -33,9 +32,10 @@ import Network.HTTP.Affjax (URL)
 import Network.HTTP.Affjax.Request (class Requestable, toRequest)
 import Partial.Unsafe (unsafePartialBecause)
 
-import Data.Optimizely (Project(..))
+import Data.Optimizely.Project (Project(..))
 import Data.Optimizely.Common (Account, Id(..), foreignOptions, foreignToRequest)
 import Data.Optimizely.Internal (mapWithIndex, readBoundedEnum, consNonEmptyWithList, consNonEmpty)
+import Data.Optimizely.Audience.Internal as Internal
 
 foreignsError :: forall t. Foldable t => String -> t Foreign -> ForeignError
 foreignsError errString fs = ForeignError $ errString <> (unsafeStringify $ fromFoldable fs)

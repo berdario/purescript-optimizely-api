@@ -1,4 +1,7 @@
-module Optimizely where
+module Network.Optimizely
+    ( module Network.Optimizely
+    , module Network.Optimizely.Internal
+    ) where
 
 import Prelude
 import Data.Optimizely
@@ -15,81 +18,23 @@ import Data.HTTP.Method (Method(..))
 import Data.Maybe (maybe)
 import Data.Maybe (Maybe(..), fromJust)
 import Data.Newtype (unwrap)
-import Data.Optimizely.Common (Id(..))
-import Data.Optimizely.Experiment (Experiment(..), NewExperiment, PutExperiment, MkNewExperiment(..), MkPutExperiment(..), Variation(..), NewVariation, PutVariation, MkNewVariation(..), MkPutVariation(..), Goal(..), NewGoal, PutGoal, putNewGoal, MkPutGoal(..))
-import Data.Optimizely.Project (NewProject, MkNewProject(..), PutProject, MkPutProject(..))
-import Data.Optimizely.Schedule (Schedule(..), EditSchedule(..))
-import Data.Optimizely.Audience (Audience, NewAudience, MkNewAudience(..), PutAudience, MkPutAudience(..), EditTargetingList, mkEditTargetingList, TargetingList, Dimension, NewDimension, MkNewDimension(..), PutDimension, MkPutDimension(..))
-import Data.Optimizely.Result (Result)
-import Data.Optimizely.DCP as DCP
-import Data.These (These)
+import Data.These (These(..))
 import Global.Unsafe (unsafeStringify)
 import Network.HTTP.Affjax (AJAX, Affjax, AffjaxRequest, AffjaxResponse, affjax, defaultRequest)
 import Network.HTTP.Affjax.Request (class Requestable)
 import Network.HTTP.Affjax.Response (class Respondable)
 import Network.HTTP.StatusCode (StatusCode(..))
+
+import Data.Optimizely.Common (Id(..))
+import Data.Optimizely.Project (Project(..), NewProject, MkNewProject(..), PutProject, MkPutProject(..))
+import Data.Optimizely.Experiment (Experiment(..), NewExperiment, PutExperiment, MkNewExperiment(..), MkPutExperiment(..), Variation(..), NewVariation, PutVariation, MkNewVariation(..), MkPutVariation(..), Goal(..), NewGoal, PutGoal, putNewGoal, MkPutGoal(..))
+import Data.Optimizely.Schedule (Schedule(..), EditSchedule(..))
+import Data.Optimizely.Audience (Audience, NewAudience, MkNewAudience(..), PutAudience, MkPutAudience(..), EditTargetingList, mkEditTargetingList, TargetingList, Dimension, NewDimension, MkNewDimension(..), PutDimension, MkPutDimension(..))
+import Data.Optimizely.Result (Result)
+import Data.Optimizely.DCP as DCP
 import Network.Optimizely.Auth (Auth, toHeader)
+import Network.Optimizely.Internal (OptimizelyError(..), H, get, post, put, delete, executeRequest, executeGet, executePost, executePut, executeDelete)
 
-data OptimizelyError = Decode String MultipleErrors | HTTP StatusCode
-derive instance genericOptimizelyError :: Generic OptimizelyError _
-
-instance showOptimizelyError :: Show OptimizelyError where
-    show = genericShow
-
-
-type H eff = ExceptT OptimizelyError (Aff (ajax :: AJAX | eff))
-
-optiRequest :: forall a. Requestable a => Method -> String -> a -> Auth -> AffjaxRequest a
-optiRequest method endpoint content auth = defaultRequest {
-    method = Left method
-  , url = "https://www.optimizelyapis.com/experiment/v1/" <> endpoint
-  , content = Just content
-  , headers = [toHeader auth]
-}
-
-get :: String -> Auth -> AffjaxRequest Unit
-get endpoint = optiRequest GET endpoint unit
-post :: forall a. Requestable a => String -> a -> Auth -> AffjaxRequest a
-post = optiRequest POST
-put :: forall a. Requestable a => String -> a -> Auth -> AffjaxRequest a
-put = optiRequest PUT
-delete :: String -> Auth -> AffjaxRequest Unit
-delete endpoint = optiRequest DELETE endpoint unit
-
-whenInvalid :: StatusCode -> Maybe StatusCode
-whenInvalid s@(StatusCode x) | x < 200 || x >= 300 = Just s
-whenInvalid _ = Nothing
-
-
-checkStatus :: forall eff a. (Respondable a) => Affjax eff a -> H eff (AffjaxResponse a)
-checkStatus request = do
-    response <- lift request
-    maybe (pure response) (throwError <<< HTTP) $ whenInvalid response.status
-
-
--- hoist generalize from mmorph
-generalize :: forall e m a. (Monad m) => Except e a -> ExceptT e m a
-generalize = mapExceptT (pure <<< unwrap)
-
-readResponse :: forall eff a. (IsForeign a) => AffjaxResponse Foreign -> H eff a
-readResponse {response} = generalize $ withExcept (Decode json) $ read $ response
-    where
-    json = unsafeStringify response
-
-executeRequest :: forall a b eff. (Requestable a, IsForeign b) => AffjaxRequest a -> H eff b
-executeRequest = readResponse <=< checkStatus <<< affjax
-
-executeGet :: forall a eff. (IsForeign a) => String -> Auth -> H eff a
-executeGet endpoint = executeRequest <<< get endpoint
-
-executePost :: forall a b eff. (Requestable a, IsForeign b) => String -> a -> Auth -> H eff b
-executePost endpoint content = executeRequest <<< post endpoint content
-
-executePut :: forall a b eff. (Requestable a, IsForeign b) => String -> a -> Auth -> H eff b
-executePut endpoint content = executeRequest <<< put endpoint content
-
-executeDelete :: forall a eff. String -> Auth -> H eff (AffjaxResponse Unit)
-executeDelete endpoint = checkStatus <<< affjax <<< delete endpoint
 
 getProject :: forall eff. Id Project -> Auth -> H eff Project
 getProject id = executeGet ("projects/" <> show id)
@@ -123,6 +68,13 @@ getSchedule id = executeGet ("schedules/" <> show id)
 
 type StartDate = DateTime
 type EndDate = DateTime
+
+start :: StartDate -> These StartDate EndDate
+start = This
+end :: EndDate -> These StartDate EndDate
+end = That
+fromTo :: StartDate -> EndDate -> These StartDate EndDate
+fromTo = Both
 
 newSchedule :: forall eff. Id Experiment -> These StartDate EndDate -> Auth -> H eff Schedule
 newSchedule experimentId content = executePost ("experiments/" <> show experimentId <> "/schedules") (EditSchedule content)
