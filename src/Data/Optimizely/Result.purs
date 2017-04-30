@@ -36,7 +36,7 @@ newtype Result = Result
     , variation_name :: String
     , goal_id :: Id Goal
     , goal_name :: String
-    , baseline_id :: Id Variation -- String ?
+    , baseline_id :: Id Variation
     , begin_time :: DateTime
     , end_time :: DateTime
     , visitors :: Number

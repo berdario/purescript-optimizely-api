@@ -184,7 +184,7 @@ instance showListType :: Show ListType where
 
 
 newtype TargetingList = TargetingList
-    { name :: String
+    { name :: Internal.ListName
     , description :: String
     , list_type :: ListType
     , key_fields :: String
@@ -202,16 +202,15 @@ instance foreignTargetingList :: IsForeign TargetingList where
 instance showTargetingList :: Show TargetingList where
     show = genericShow
 
-type EditTargetingList = forall r.
-    { name :: String -- only characters, numbers, hyphens, and underscores.
+type EditTargetingList =
+    { name :: Internal.ListName
     , list_type :: ListType
     , list_content :: String
     , description :: Undefined String
-    | r
     }
 
 newtype MkEditTargetingList = MkEditTargetingList
-    { name :: String
+    { name :: Internal.ListName
     , list_type :: ListType
     , list_content :: String
     , description :: Undefined String
@@ -219,7 +218,14 @@ newtype MkEditTargetingList = MkEditTargetingList
     }
 
 mkEditTargetingList :: EditTargetingList -> MkEditTargetingList
-mkEditTargetingList r = MkEditTargetingList r{format="csv"}
+mkEditTargetingList {name, list_type, list_content, description}
+    = MkEditTargetingList
+        { name:name
+        , list_type:list_type
+        , list_content:list_content
+        , description:description
+        , format:"csv"
+        }
 
 derive instance genericEditTargetingList :: Generic MkEditTargetingList _
 
