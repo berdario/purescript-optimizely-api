@@ -10,7 +10,7 @@ import Data.Either (Either(..))
 import Data.Enum (class BoundedEnum, class Enum, Cardinality(..), toEnum, fromEnum)
 import Data.Foldable (class Foldable)
 import Data.Foreign (F, Foreign, ForeignError(..), fail, readArray, readString, toForeign)
-import Data.Foreign.Class (class IsForeign, read, class AsForeign, write)
+import Data.Foreign.Class (class IsForeign, read, readJSON, class AsForeign, write)
 import Data.Foreign.Generic (readGeneric, toForeignGeneric)
 import Data.Foreign.Undefined (Undefined)
 import Data.Generic.Rep (class Generic)
@@ -87,7 +87,7 @@ derive newtype instance showRootCondition :: Show RootCondition
 instance isForeignRootCondition :: IsForeign RootCondition where
     read val = do
         nestedJSON <- readString val
-        lst <- toUnfoldable <$> read val
+        lst <- toUnfoldable <$> readJSON nestedJSON
         RootCondition <$> readConditionExpr lst
 
 nestedWrite :: forall a. AsForeign a => a -> Foreign

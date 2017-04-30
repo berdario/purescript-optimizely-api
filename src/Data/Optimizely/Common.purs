@@ -1,8 +1,9 @@
 module Data.Optimizely.Common where
 
 import Prelude
-import Data.Foreign (F, ForeignError(..), fail)
-import Data.Foreign.Class (class AsForeign, class IsForeign, read, write)
+import Control.Alt ((<|>))
+import Data.Foreign (F, ForeignError(..), Foreign, fail)
+import Data.Foreign.Class (class AsForeign, class IsForeign, read, write, readJSON)
 import Data.Foreign.Generic (defaultOptions)
 import Data.Foreign.Generic.Types (Options)
 import Data.Int53 (Int53, fromNumber, toNumber, toString)
@@ -30,8 +31,10 @@ instance showId :: Show (Id a) where
     show (Id x) = toString x
 
 instance isForeignId :: IsForeign (Id a) where
-    read val = readId =<< read val
+    read val = readId =<< (read val <|> readNumberAsString val)
         where
+        readNumberAsString :: Foreign -> F Number
+        readNumberAsString value = readJSON =<< read value
         readId :: Number -> F (Id a)
         readId num = maybe (fail $ ForeignError $ show num <> " is too big for a js int") (pure <<< Id) $ fromNumber num
 
