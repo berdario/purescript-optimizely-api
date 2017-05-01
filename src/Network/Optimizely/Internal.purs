@@ -2,7 +2,7 @@ module Network.Optimizely.Internal where
 
 import Prelude
 import Control.Monad.Aff (Aff)
-import Control.Monad.Except (ExceptT, Except, mapExceptT, withExcept, throwError)
+import Control.Monad.Except (ExceptT, Except, mapExceptT, withExcept, throwError, class MonadError)
 import Control.Monad.Trans.Class (lift)
 import Data.Either (Either(..))
 import Data.Foreign (Foreign, MultipleErrors)
@@ -19,7 +19,7 @@ import Network.HTTP.Affjax.Response (class Respondable)
 import Network.HTTP.StatusCode (StatusCode(..))
 import Network.Optimizely.Auth (Auth, toHeader)
 
-data OptimizelyError = Decode String MultipleErrors | HTTP StatusCode
+data OptimizelyError = Decode String MultipleErrors | HTTP StatusCode String
 derive instance genericOptimizelyError :: Generic OptimizelyError _
 
 instance showOptimizelyError :: Show OptimizelyError where
@@ -43,18 +43,19 @@ post = optiRequest POST
 put :: forall a. Requestable a => String -> a -> Auth -> AffjaxRequest a
 put = optiRequest PUT
 delete :: String -> Auth -> AffjaxRequest Unit
-delete endpoint = optiRequest DELETE endpoint unit
+delete endpoint auth = (optiRequest DELETE endpoint unit auth){content=Nothing}
 
-whenInvalid :: StatusCode -> Maybe StatusCode
-whenInvalid s@(StatusCode x) | x < 200 || x >= 300 = Just s
+whenInvalid :: forall a. AffjaxResponse a -> Maybe (AffjaxResponse a)
+whenInvalid r@{status:StatusCode x} | x < 200 || x >= 300 = Just r
 whenInvalid _ = Nothing
-
 
 checkStatus :: forall eff a. (Respondable a) => Affjax eff a -> H eff (AffjaxResponse a)
 checkStatus request = do
     response <- lift request
-    maybe (pure response) (throwError <<< HTTP) $ whenInvalid response.status
+    maybe (pure response) httpError $ whenInvalid response
 
+httpError :: forall m a b. MonadError OptimizelyError m => AffjaxResponse a -> m b
+httpError {response, status} = throwError $ HTTP status $ unsafeStringify response
 
 -- hoist generalize from mmorph
 generalize :: forall e m a. (Monad m) => Except e a -> ExceptT e m a

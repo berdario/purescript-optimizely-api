@@ -114,19 +114,19 @@ listAudiences :: forall eff. Id Project -> Auth -> H eff (Array Audience)
 listAudiences id = executeGet ("projects/" <> show id <> "/audiences")
 
 getTargetingList :: forall eff. Id TargetingList -> Auth -> H eff TargetingList
-getTargetingList id = executeGet ("targetingLists/" <> show id)
+getTargetingList id = executeGet ("targeting_lists/" <> show id)
 
 newTargetingList :: forall eff. Id Project -> EditTargetingList -> Auth -> H eff TargetingList
-newTargetingList projectId content = executePost ("projects/" <> show projectId <> "/targetingLists") (mkEditTargetingList content)
+newTargetingList projectId content = executePost ("projects/" <> show projectId <> "/targeting_lists") (mkEditTargetingList content)
 
 updateTargetingList :: forall eff. Id TargetingList -> EditTargetingList -> Auth -> H eff TargetingList
-updateTargetingList id content = executePut ("targetingLists/" <> show id) (mkEditTargetingList content)
+updateTargetingList id content = executePut ("targeting_lists/" <> show id) (mkEditTargetingList content)
 
 deleteTargetingList :: forall eff. Id TargetingList -> Auth -> H eff (AffjaxResponse Unit)
-deleteTargetingList id = executeDelete ("targetingLists/" <> show id)
+deleteTargetingList id = executeDelete ("targeting_lists/" <> show id)
 
 listTargetingLists :: forall eff. Id Project -> Auth -> H eff (Array TargetingList)
-listTargetingLists id = executeGet ("projects/" <> show id <> "/targetingLists")
+listTargetingLists id = executeGet ("projects/" <> show id <> "/targeting_lists")
 
 getDimension :: forall eff. Id Dimension -> Auth -> H eff Dimension
 getDimension id = executeGet ("dimensions/" <> show id)

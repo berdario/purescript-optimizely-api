@@ -53,7 +53,7 @@ newtype Project = Project
     , ip_anonymization :: Boolean
     , ip_filter :: Null String
     , is_shared :: Undefined Boolean
-    , js_file_size :: Int
+    , js_file_size :: Null Int
     , last_modified :: DateTime
     , library :: String
     , opted_into_apps_beta :: Undefined Boolean

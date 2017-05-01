@@ -12,7 +12,8 @@ import Data.Foldable (class Foldable)
 import Data.Foreign (F, Foreign, ForeignError(..), fail, readArray, readString, toForeign)
 import Data.Foreign.Class (class IsForeign, read, readJSON, class AsForeign, write)
 import Data.Foreign.Generic (readGeneric, toForeignGeneric)
-import Data.Foreign.Undefined (Undefined)
+import Data.Foreign.Null (Null)
+import Data.Foreign.Undefined (Undefined(..))
 import Data.Generic.Rep (class Generic)
 import Data.Generic.Rep.Show (genericShow)
 import Data.List (List(..), (:))
@@ -80,7 +81,15 @@ instance asForeignCondition :: AsForeign Condition where
     write (Or cs) = write $ fromFoldable (write "or" `consNonEmpty` map write cs)
     write (Rule r) = write $ Internal.Rule r
 
-newtype RootCondition = RootCondition Condition
+emptyRule :: Internal.RuleRecord
+emptyRule =
+    { type : ""
+    , value : Undefined Nothing
+    , match_type : Undefined Nothing
+    , name : Undefined Nothing
+    }
+
+newtype RootCondition = RootCondition (Maybe Condition)
 
 derive newtype instance showRootCondition :: Show RootCondition
 
@@ -88,14 +97,18 @@ instance isForeignRootCondition :: IsForeign RootCondition where
     read val = do
         nestedJSON <- readString val
         lst <- toUnfoldable <$> readJSON nestedJSON
-        RootCondition <$> readConditionExpr lst
+        RootCondition <$> maybeCondition lst
+        where
+            maybeCondition Nil = pure Nothing
+            maybeCondition lst = Just <$> readConditionExpr lst
 
 nestedWrite :: forall a. AsForeign a => a -> Foreign
 nestedWrite = write <<< unsafeStringify <<< write
 
 instance asForeignRootCondition :: AsForeign RootCondition where
-    write (RootCondition (Rule r)) = nestedWrite $ And $ NEL.singleton (Rule r)
-    write (RootCondition cond) = nestedWrite cond
+    write (RootCondition Nothing) = nestedWrite ([] :: Array Foreign)
+    write (RootCondition (Just (Rule r))) = nestedWrite $ And $ NEL.singleton (Rule r)
+    write (RootCondition (Just cond)) = nestedWrite cond
 
 newtype Audience = Audience
     { description :: String
@@ -145,6 +158,13 @@ instance asForeignPutAudience :: AsForeign MkPutAudience where
 instance requestablePutAudience :: Requestable MkPutAudience where
     toRequest = foreignToRequest
 
+emptyAudience :: PutAudience
+emptyAudience =
+    { name : Undefined Nothing
+    , description : Undefined Nothing
+    , conditions : Undefined Nothing
+    , segmentation : Undefined Nothing
+    }
 
 
 data ListType = Cookie | QueryParameter | ZipCode
@@ -185,7 +205,7 @@ instance showListType :: Show ListType where
 
 newtype TargetingList = TargetingList
     { name :: Internal.ListName
-    , description :: String
+    , description :: Null String
     , list_type :: ListType
     , key_fields :: String
     , id :: Id TargetingList
@@ -206,6 +226,7 @@ type EditTargetingList =
     { name :: Internal.ListName
     , list_type :: ListType
     , list_content :: String
+    , key_fields :: String
     , description :: Undefined String
     }
 
@@ -213,16 +234,18 @@ newtype MkEditTargetingList = MkEditTargetingList
     { name :: Internal.ListName
     , list_type :: ListType
     , list_content :: String
+    , key_fields :: String
     , description :: Undefined String
     , format :: String
     }
 
 mkEditTargetingList :: EditTargetingList -> MkEditTargetingList
-mkEditTargetingList {name, list_type, list_content, description}
+mkEditTargetingList {name, list_type, list_content, key_fields, description}
     = MkEditTargetingList
         { name:name
         , list_type:list_type
         , list_content:list_content
+        , key_fields:key_fields
         , description:description
         , format:"csv"
         }
@@ -238,7 +261,7 @@ instance requestableEditTargetingList :: Requestable MkEditTargetingList where
 newtype Dimension = Dimension
     { name :: String
     , last_modified :: DateTime
-    , client_api_name :: String
+    , client_api_name :: Null String
     , id :: Id Dimension
     , description :: String
     }
@@ -277,6 +300,13 @@ instance asForeignPutDimension :: AsForeign MkPutDimension where
 
 instance requestablePutDimension :: Requestable MkPutDimension where
     toRequest = foreignToRequest
+
+emptyDimension :: PutDimension
+emptyDimension =
+    { name : Undefined Nothing
+    , client_api_name : Undefined Nothing
+    , description : Undefined Nothing
+    }
 
 
 

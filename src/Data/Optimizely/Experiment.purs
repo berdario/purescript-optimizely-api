@@ -45,11 +45,8 @@ instance showExperimentStatus :: Show ExperimentStatus where
     show = genericShow
 
 newtype Condition = Condition
-    { index :: Int
-    , match_type :: MatchType
-    , created :: DateTime
+    { match_type :: MatchType
     , value :: URL
-    , last_modified :: DateTime
     , negate :: Boolean
     }
 derive instance genericCondition :: Generic Condition _
@@ -105,7 +102,7 @@ instance showExperimentType :: Show ExperimentType where
 newtype Experiment = Experiment
     { id :: Id Experiment
     , percentage_included :: Int
-    , display_goal_order_lst :: Array Number
+    , display_goal_order_lst :: Array (Id Goal)
     , is_multivariate :: Boolean
     , project_id :: Id Project
     , variation_ids :: Array (Id Variation)
@@ -166,14 +163,26 @@ instance asForeignPutExperiment :: AsForeign MkPutExperiment where
 instance requestablePutExperiment :: Requestable MkPutExperiment where
     toRequest = foreignToRequest
 
+emptyExperiment :: PutExperiment
+emptyExperiment =
+    { description : Undefined Nothing
+    , edit_url : Undefined Nothing
+    , audience_ids : Undefined Nothing
+    , activation_mode : Undefined Nothing
+    , status : Undefined Nothing
+    , custom_css : Undefined Nothing
+    , custom_js : Undefined Nothing
+    , percentage_included : Undefined Nothing
+    , url_conditions : Undefined Nothing
+    }
 
 newtype Variation = Variation
     { is_paused :: Boolean
     , description :: String
-    , weight :: Int
+    , weight :: Null Int
     , created :: DateTime
     , section_id :: Null (Id Section)
-    , js_component :: String
+    , js_component :: Null String
     , experiment_id :: Id Experiment
     , project_id :: Id Project
     , id :: Id Variation
@@ -215,12 +224,19 @@ instance asForeignPutVariation :: AsForeign MkPutVariation where
 instance requestablePutVariation :: Requestable MkPutVariation where
     toRequest = foreignToRequest
 
+emptyVariation :: PutVariation
+emptyVariation =
+    { description : Undefined Nothing
+    , is_paused : Undefined Nothing
+    , js_component : Undefined Nothing
+    , weight : Undefined Nothing
+    }
 
 
 
 newtype Goal = Goal
     { is_editable :: Null Boolean
-    , target_to_experiments :: Boolean
+    , target_to_experiments :: Null Boolean
     , archived :: Boolean
     , description :: String
     , id :: Id Goal
@@ -231,10 +247,10 @@ newtype Goal = Goal
     , project_id :: Id Project
     , goal_type :: GoalType
     , experiment_ids :: Array (Id Experiment)
-    , selector :: String
+    , selector :: Null String
     , created :: DateTime
     , last_modified :: DateTime
-    , target_url_match_types :: Array UrlMatchType
+    , target_url_match_types :: Array MatchType
     , urls :: Array URL
     }
 derive instance genericGoal :: Generic Goal _
@@ -251,7 +267,7 @@ data NewGoal = NewGoal String NewGoalFields
 data NewGoalFields
     = NewClick String
                (Maybe { target_urls :: Array String
-                      , target_url_match_types :: Array UrlMatchType})
+                      , target_url_match_types :: Array MatchType})
     | NewPageView (NonEmptyList URL)
                   (NonEmptyList UrlMatchType)
     | NewCustom String
@@ -264,15 +280,15 @@ type PutGoal =
     , selector :: Undefined String
     , target_to_experiments :: Undefined Boolean
     , target_urls :: Undefined (Array String)
-    , target_url_match_types :: Undefined (Array UrlMatchType)
+    , target_url_match_types :: Undefined (Array MatchType)
     , title :: Undefined String
     , urls :: Undefined (Array URL)
     , url_match_types :: Undefined (Array UrlMatchType)
     , event :: Undefined String
     }
 
-emptyNewGoal :: PutGoal
-emptyNewGoal =
+emptyGoal :: PutGoal
+emptyGoal =
     { archived : Undefined Nothing
     , description : Undefined Nothing
     , experiment_ids : Undefined Nothing
@@ -291,7 +307,7 @@ just :: forall a. a -> Undefined a
 just = Undefined <<< Just
 
 putNewGoal :: NewGoal -> MkPutGoal
-putNewGoal (NewGoal title newgoal) = newGoalFields emptyNewGoal{title=just title} newgoal
+putNewGoal (NewGoal title newgoal) = newGoalFields emptyGoal{title=just title} newgoal
 
 newGoalFields :: PutGoal -> NewGoalFields -> MkPutGoal
 newGoalFields record (NewClick selector Nothing)
