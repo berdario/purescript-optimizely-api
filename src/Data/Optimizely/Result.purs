@@ -5,6 +5,7 @@ import Data.DateTime.Foreign (DateTime)
 import Data.Foreign (fail, ForeignError(..), readString)
 import Data.Foreign.Class (class IsForeign)
 import Data.Foreign.Generic (readGeneric)
+import Data.Foreign.Null (Null)
 import Data.Generic.Rep (class Generic)
 import Data.Generic.Rep.Show (genericShow)
 import Data.Newtype (class Newtype)
@@ -46,8 +47,8 @@ newtype Result = Result
     , improvement :: Number
     , statistical_significance :: Number
     , difference :: Number
-    , difference_confidence_interval_max :: Number
-    , difference_confidence_interval_min :: Number
+    , difference_confidence_interval_max :: Null Number
+    , difference_confidence_interval_min :: Null Number
     , visitors_until_statistically_significant :: Number
     , is_revenue :: Boolean
     }
