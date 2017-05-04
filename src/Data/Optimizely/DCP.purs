@@ -17,6 +17,7 @@ module Data.Optimizely.DCP
     , EditAttribute(..)
     , NewAttribute(..)
     , NewAttributeFields(..)
+    , emptyDatasource
     ) where
 
 import Prelude
@@ -25,7 +26,7 @@ import Data.Foreign (ForeignError(..), fail, readString, writeObject)
 import Data.Foreign.Class (class IsForeign, writeProp, class AsForeign, write)
 import Data.Foreign.Generic (toForeignGeneric, readGeneric)
 import Data.Foreign.Null (Null(..))
-import Data.Foreign.Undefined (Undefined)
+import Data.Foreign.Undefined (Undefined(..))
 import Data.Generic.Rep (class Generic)
 import Data.Generic.Rep.Show (genericShow)
 import Data.Maybe (Maybe(..))
@@ -150,6 +151,14 @@ type EditDatasource name locType locName =
 
 type NewDatasource = EditDatasource String LocatorType (Null LocatorName)
 type PutDatasource = EditDatasource (Undefined String) (Undefined LocatorType) (Undefined (Null LocatorName))
+
+emptyDatasource :: PutDatasource
+emptyDatasource =
+    { name : Undefined Nothing
+    , keyfield_locator_type : Undefined Nothing
+    , keyfield_locator_name : Undefined Nothing
+    , description : Undefined Nothing
+    }
 
 newtype MkNewDatasource = MkNewDatasource NewDatasource
 derive instance genericNewDatasource :: Generic MkNewDatasource _
