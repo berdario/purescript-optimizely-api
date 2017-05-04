@@ -1,8 +1,9 @@
-
 language: node_js
 node_js: stable
 script:
   - yarn run pulp -- build
   - yarn run pulp -- test
-
 cache: yarn
+env:
+  global:
+    secure: HFhf0u6dtsj5S9NUG5BIAjmG2r9lg3XtmWGCBnUVEuXNR7BmpXiKb8XdauruVJ3iMnTlkXILJFUBESxcqJ6cFfeMjHcBHNEeecuq3ScnlJtsZjoA+14RzuwS2mF3GND9nERjYcUQ78jntJWIWl5LzpgU/UQ5xjec1UXNUSWy+yjpdkVoqgmEyae2QpM/WmrIOn4+tqZbTfgIH5uCmQ7SZDyJ5ZgXKy3dpEMnWHC91HV33Mc6X590T8siJwVrj8BK0L1FyUNbrV5kSgNixXYBFuVFKDCyfJ53QS7FCmPSSCGqPr9P1qc4GFCMmPaKrDGQ9uoecxrK24cve5NZyTdEVEXm3BkbaHXQCm+XNRmeXbrYQP3y/kgA178g/KlQXiLRtszzZLSbfgK1gJQeabEZEQz3aYHoUQ4YSEAKxKspsL9HNOH/Nq9XHufQ0rSbfjiKAItr+HhvJ6j2fQZpz8CqR8UoKglisSvcw8uNWGvHZI71fECjUadqOVWdBqQOvghwuXCb2jG9VrAyc1qVSdyqPFvPxHr1qR0T0qSt5BMjF7ZJ9YvyniWLfnuFK4CMRgM6fKz8rKnfb9E2YoJSp2jVsft+1VYCWsENtBx4CmsGiNKoOp/P0zOB6NfEYSltIo8JKExHnkqFj1e1O3+ZWW2SjS1+MWp5WodHd8xnu29/QvI=

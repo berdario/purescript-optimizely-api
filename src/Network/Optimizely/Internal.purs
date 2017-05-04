@@ -19,7 +19,7 @@ import Network.HTTP.Affjax.Response (class Respondable)
 import Network.HTTP.StatusCode (StatusCode(..))
 import Network.Optimizely.Auth (Auth, toHeader)
 
-data OptimizelyError = Decode String MultipleErrors | HTTP StatusCode String
+data OptimizelyError = Decode String MultipleErrors | HTTP StatusCode String | Other String
 derive instance genericOptimizelyError :: Generic OptimizelyError _
 
 instance showOptimizelyError :: Show OptimizelyError where
@@ -37,7 +37,7 @@ optiRequest method endpoint content auth = defaultRequest {
 }
 
 get :: String -> Auth -> AffjaxRequest Unit
-get endpoint = optiRequest GET endpoint unit
+get endpoint auth = (optiRequest GET endpoint unit auth){content=Nothing}
 post :: forall a. Requestable a => String -> a -> Auth -> AffjaxRequest a
 post = optiRequest POST
 put :: forall a. Requestable a => String -> a -> Auth -> AffjaxRequest a

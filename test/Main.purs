@@ -4,22 +4,36 @@ import Prelude
 import Control.Monad.Aff.AVar (AVAR)
 import Control.Monad.Eff (Eff)
 import Control.Monad.Eff.Console (CONSOLE)
-import Control.Monad.Except (Except, runExcept, withExcept)
-import Data.Either (either)
+import Control.Monad.Eff.Now (NOW)
+import Control.Monad.Except (Except)
 import Data.Foreign (F)
 import Data.Foreign.Class (class IsForeign, readJSON)
-import Test.Unit (Test, TestSuite, failure, success, test)
+import Network.HTTP.Affjax (AJAX)
+import Node.Process (PROCESS, lookupEnv)
+import Test.Unit (Test, TestSuite, test, suite)
 import Test.Unit.Console (TESTOUTPUT)
 import Test.Unit.Main (runTest)
 import Type.Proxy (Proxy(..))
 
 import Data.Optimizely (Audience, Dimension, Experiment, Goal, Project, Result, Schedule, TargetingList, Variation)
 import Data.Optimizely.DCP as DCP
+import Network.Optimizely.Auth (Auth(..))
+import Network.Optimizely.Internal (generalize)
+import Test.Integration (integration)
+import Test.Common (assertExceptT)
 
-type TestEffs = (console :: CONSOLE, testOutput :: TESTOUTPUT, avar :: AVAR)
+type TestEffs = (console :: CONSOLE, testOutput :: TESTOUTPUT, avar :: AVAR, process :: PROCESS, ajax :: AJAX, now :: NOW)
 
 main :: Eff TestEffs Unit
-main = runTest do
+main = do
+  key <- lookupEnv "OPTIMIZELY_KEY"
+  runTest $ do
+    deserializations
+    integration $ map ClassicToken key
+
+
+deserializations :: TestSuite TestEffs
+deserializations = suite "Deserializations" $ do
   checkDeserialize "Project" (Proxy :: Proxy Project) """{
     "id": 859720118,
     "account_id": 555650815,
@@ -219,7 +233,4 @@ checkDeserialize name _ json =
         assertExcept (readJSON json :: F e)
 
 assertExcept :: forall e a. Show e => Except e a -> Test TestEffs
-assertExcept result = assertEither $ runExcept $ withExcept show result
-    where
-      assertEither = either failure (const success)
-
+assertExcept = assertExceptT <<< generalize
