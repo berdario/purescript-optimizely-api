@@ -6,7 +6,7 @@ import Data.DateTime.Foreign (DateTime)
 import Data.Foreign (ForeignError(..), fail, readString)
 import Data.Foreign.Class (class IsForeign, class AsForeign, write)
 import Data.Foreign.Generic (toForeignGeneric, readGeneric)
-import Data.Foreign.Null (Null)
+import Data.Foreign.Null (Null(..))
 import Data.Foreign.Undefined (Undefined(..))
 import Data.Generic.Rep (class Generic)
 import Data.Generic.Rep.Show (genericShow)
@@ -110,7 +110,7 @@ newtype Experiment = Experiment
     , url_conditions :: Array Condition
     , description :: String
     , last_modified :: DateTime
-    , activation_mode :: ActivationMode
+    , activation_mode :: Null ActivationMode
     , details :: String
     , custom_css :: String
     , created :: DateTime
@@ -134,7 +134,7 @@ type EditExperiment desc edit_url =
     { description :: desc
     , edit_url :: edit_url
     , audience_ids :: Undefined (Array (Id Audience))
-    , activation_mode :: Undefined ActivationMode
+    , activation_mode :: Undefined (Null ActivationMode)
     , status :: Undefined ExperimentStatus
     , custom_css :: Undefined String
     , custom_js :: Undefined String
